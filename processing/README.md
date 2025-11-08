@@ -20,7 +20,7 @@ Nhiệm vụ của module này là đọc các file log thô từ nhiều nguồ
     4.  **Tổng hợp:** Tập hợp tất cả các dòng log (từ các nguồn khác nhau) vào một DataFrame (bảng) duy nhất của Pandas.
     5.  **Xuất file:** Lưu DataFrame này thành file `processed_logs_combined.csv`.
 
-### 🚀 Cách sử dụng
+## 3. Cách sử dụng
 
 1.  **Chuẩn bị file log:** Đảm bảo có file `all_logs.log` (hoặc file log đầu vào) trong cùng thư mục.
 2.  **Chạy script:**
