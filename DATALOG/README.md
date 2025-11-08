@@ -7,7 +7,9 @@ Thư mục này chứa tất cả dữ liệu thô, và bộ dữ liệu trainin
 ## Dữ liệu Huấn luyện Cuối cùng
 
 **File:** `training_dataset.csv`
+
 **Link tải:** [Tại đây](https://drive.google.com/file/d/1w9QK1y9Y_aaRDgA8hBb3uXPn4fKlfLO_/view?usp=drive_link)
+
 **Mô tả:** 
 * Đây là file dữ liệu "sạch", đã được gán nhãn và xáo trộn (shuffle), sẵn sàng để huấn luyện mô hình Machine Learning.
 * Bao gồm các trường của **access.log** và **auth.log**, loại log và nhãn dán (is attack)
