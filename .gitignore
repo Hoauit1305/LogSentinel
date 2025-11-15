@@ -1,2 +1,3 @@
 # Bỏ qua tất cả các thư mục __pycache__
 __pycache__/
+*.log
