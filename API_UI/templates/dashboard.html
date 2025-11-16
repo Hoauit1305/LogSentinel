@@ -2,111 +2,114 @@
 <html lang="vi" data-bs-theme="dark">
 <head>
     <meta charset="UTF-8">
-    <title>Log Sentinel Dashboard</title>
-    <meta http-equiv="refresh" content="1">
     <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Log Sentinel Dashboard</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
-        body { background-color: #212529; }
+        body { background-color: #212529; overflow-x: hidden; }
         .card { background-color: #2b3035; }
         .table { background-color: #2b3035; }
-        .type-ml { color: #f8d7da; /* Red */ }
-        .type-ssh { color: #ffc107; /* Yellow */ }
-        .type-web { color: #0dcaf0; /* Cyan */ }
+        .type-ml { color: #f8d7da; }
+        .type-ssh { color: #ffc107; }
+        .type-web { color: #0dcaf0; }
         .confidence-high { background-color: rgba(220, 53, 69, 0.15); }
         pre { background-color: #343a40; color: #f8f9fa; padding: 10px; border-radius: 5px; white-space: pre-wrap; word-wrap: break-word; }
     </style>
 </head>
 <body>
-    <div class="container mt-4">
+    <div class="container-fluid mt-4">
         <h1 class="mb-4 text-light"><i class="fa-solid fa-shield-virus"></i> Log Sentinel Dashboard</h1>
-        <p class="text-muted">Tự động cập nhật sau 1 giây...</p>
+        <p class="text-muted">Cảnh báo an ninh thời gian thực</p>
         
-        <div class="row mb-4">
-            <div class="col-md-6 mb-3">
-                <div class="card text-light shadow-sm">
+        <div id="chart-data-container" 
+             data-labels="{{ chart_labels | tojson | safe }}" 
+             data-counts="{{ chart_data_counts | tojson | safe }}"
+             style="display: none;">
+        </div>
+
+        <div class="row mb-4 align-items-stretch"> 
+            
+            <div class="col-md-4 mb-4 mb-md-0">
+                <div class="card text-light shadow-sm"> 
                     <div class="card-body">
                         <div class="d-flex align-items-center">
                             <i class="fa-solid fa-triangle-exclamation fa-3x text-danger me-4"></i>
                             <div>
                                 <h5 class="card-title text-danger">TỔNG CẢNH BÁO</h5>
-                                <h2 class="card-text display-4">{{ total_alerts }}</h2>
+                                <h2 class="card-text display-4" id="total-alerts-value">{{ total_alerts }}</h2>
                             </div>
                         </div>
                     </div>
                 </div>
             </div>
-            <div class="col-md-6 mb-3">
-                <div class="card text-light shadow-sm">
+            
+            <div class="col-md-4 mb-4 mb-md-0">
+                <div class="card text-light shadow-sm h-100"> 
                     <div class="card-body">
-                        <div class="d-flex align-items-center">
-                            <i class="fa-solid fa-bug fa-3x text-warning me-4"></i>
-                            <div>
-                                <h5 class="card-title text-warning">LOẠI PHỔ BIẾN NHẤT</h5>
-                                <h2 class="card-text">{{ top_attack_type }}</h2>
-                            </div>
-                        </div>
+                        <h5 class="card-title text-info mb-3">TỔNG QUAN SỐ LƯỢNG</h5>
+                        <canvas id="attackBarChart" style="max-height: 220px;"></canvas>
                     </div>
                 </div>
             </div>
-        </div>
+            
+            <div class="col-md-4 mb-4 mb-md-0">
+                <div class="card text-light shadow-sm h-100"> 
+                    <div class="card-body">
+                        <h5 class="card-title text-warning mb-3">TỈ LỆ TẤN CÔNG</h5>
+                        <canvas id="attackPieChart" style="min-height: 220px; max-height: 220px;"></canvas>
+                    </div>
+                </div>
+            </div>
 
+        </div>
+        
         <h2 class="text-light">Cảnh báo mới nhất</h2>
         <div class="table-responsive shadow-sm">
             <table class="table table-dark table-striped table-hover align-middle">
                 <thead>
                     <tr>
                         <th><i class="fa-regular fa-clock"></i> Thời gian</th>
-                        <th><i class="fa-solid fa-flag"></i> Loại Cảnh Báo</th>
+                        <th><i class="fa-solid fa-flag"></i> Loại Cảnh BÁO</th>
                         <th><i class="fa-solid fa-laptop-code"></i> IP Nguồn</th>
                         <th><i class="fa-solid fa-circle-info"></i> Chi tiết</th>
                         <th><i class="fa-solid fa-check-double"></i> Độ tự tin</th>
                         <th><i class="fa-solid fa-file-alt"></i> Log Gốc</th>
                     </tr>
                 </thead>
-                <tbody>
+                <tbody id="alerts-tbody">
                     {% for alert in alerts %}
-                        <tr class="{% if alert['confidence'] > 0.9 %}confidence-high{% endif %}">
-                            
-                            <td>{{ alert['timestamp'] }}</td>
-                            
-                            <td class="
-                                {% if 'ML' in alert['alert_type'] %}type-ml{% endif %}
-                                {% if 'SSH' in alert['alert_type'] %}type-ssh{% endif %}
-                                {% if 'Web' in alert['alert_type'] %}type-web{% endif %}
-                            ">
-                                <strong>{{ alert['alert_type'] }}</strong>
+                        <tr class="{% if alert.confidence > 0.9 %}confidence-high{% endif %}">
+                            <td>{{ alert.timestamp }}</td>
+                            <td class="{% if 'ML' in alert.alert_type %}type-ml{% elif 'SSH' in alert.alert_type %}type-ssh{% elif 'Web' in alert.alert_type %}type-web{% endif %}">
+                                <strong>{{ alert.alert_type }}</strong>
                             </td>
-                            
-                            <td>{{ alert['ip_address'] }}</td>
-
+                            <td>{{ alert.ip_address }}</td>
                             <td style="max-width: 300px; word-break: break-all;">
-                                {{ alert['details'] }}
+                                {{ alert.details }}
                             </td>
-                            
                             <td>
-                                {% if alert['alert_type'] == 'ML Attack' %}
-                                <div class="progress" style="height: 20px;">
+                                {% if alert.alert_type == 'ML Attack' %}
+                                <div class="progress" style="height: 20px; --confidence-width: {{ alert.confidence * 100 }}%;">
                                     <div class="progress-bar bg-danger" role="progressbar" 
-                                         style="width: {{ alert['confidence'] * 100 }}%;" >
-                                         {{ "%.1f"|format(alert['confidence'] * 100) }}%
+                                         style="width: var(--confidence-width);">
+                                        {{ "%.1f"|format(alert.confidence * 100) }}%
                                     </div>
                                 </div>
                                 {% else %}
                                     <span class="text-muted">N/A</span>
                                 {% endif %}
                             </td>
-                            
                             <td>
                                 <details>
                                     <summary>Xem JSON</summary>
-                                    <pre>{{ alert['raw_log_data'] | tojson(indent=2) }}</pre>
+                                    <pre>{% if alert.raw_log_data is mapping %}{{ alert.raw_log_data | tojson(indent=2) }}{% else %}{{ alert.raw_log_data }}{% endif %}</pre>
                                 </details>
                             </td>
                         </tr>
                     {% else %}
-                        <tr>
+                        <tr> 
                             <td colspan="6" class="text-center">Chưa có cảnh báo nào.</td>
                         </tr>
                     {% endfor %}
@@ -114,5 +117,188 @@
             </table>
         </div>
     </div>
+
+    <script>
+        let pieChartInstance = null;
+        let barChartInstance = null;
+
+        // Hàm vẽ/cập nhật biểu đồ tròn
+        function updatePieChart(labels, dataCounts) {
+            const ctx = document.getElementById('attackPieChart').getContext('2d');
+            if (!ctx) return;
+            
+            if (pieChartInstance) {
+                pieChartInstance.data.labels = labels;
+                pieChartInstance.data.datasets[0].data = dataCounts;
+                pieChartInstance.update();
+            } else {
+                pieChartInstance = new Chart(ctx, {
+                    type: 'doughnut',
+                    data: {
+                        labels: labels,
+                        datasets: [{
+                            label: 'Số lượng',
+                            data: dataCounts,
+                            backgroundColor: ['rgba(220, 53, 69, 0.8)','rgba(255, 193, 7, 0.8)','rgba(13, 202, 240, 0.8)','rgba(108, 117, 125, 0.8)'],
+                            borderColor: '#2b3035',
+                            borderWidth: 2,
+                            hoverOffset: 4
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: { legend: { position: 'bottom', labels: { color: '#f8f9fa' } } }
+                    }
+                });
+            }
+        }
+
+        // Hàm vẽ/cập nhật biểu đồ cột
+        function updateBarChart(labels, dataCounts) {
+            const ctx = document.getElementById('attackBarChart').getContext('2d');
+            if (!ctx) return;
+
+            if (barChartInstance) {
+                barChartInstance.data.labels = labels;
+                barChartInstance.data.datasets[0].data = dataCounts;
+                barChartInstance.update();
+            } else {
+                barChartInstance = new Chart(ctx, {
+                    type: 'bar',
+                    data: {
+                        labels: labels,
+                        datasets: [{
+                            label: 'Số lượng cảnh báo',
+                            data: dataCounts,
+                            backgroundColor: ['rgba(220, 53, 69, 0.7)','rgba(255, 193, 7, 0.7)','rgba(13, 202, 240, 0.7)','rgba(108, 117, 125, 0.7)'],
+                            borderColor: ['rgba(220, 53, 69, 1)','rgba(255, 193, 7, 1)','rgba(13, 202, 240, 1)','rgba(108, 117, 125, 1)'],
+                            borderWidth: 1
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        scales: {
+                            y: { beginAtZero: true, ticks: { color: '#f8f9fa', stepSize: 1 }, grid: { color: 'rgba(255, 255, 255, 0.1)' } },
+                            x: { ticks: { color: '#f8f9fa' }, grid: { color: 'rgba(255, 255, 255, 0.1)' } }
+                        },
+                        plugins: { legend: { display: false } }
+                    }
+                });
+            }
+        }
+
+        // Hàm vẽ lại bảng
+        function updateAlertsTable(alerts) {
+            const tbody = document.getElementById('alerts-tbody');
+            if (!tbody) return; 
+            tbody.innerHTML = ''; 
+
+            if (!alerts || alerts.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="6" class="text-center">Chưa có cảnh báo nào.</td></tr>';
+                return;
+            }
+
+            alerts.forEach(alert => {
+                let confidenceHtml = '<span class="text-muted">N/A</span>';
+                if (alert.alert_type === 'ML Attack') {
+                    const percent = (alert.confidence * 100).toFixed(1);
+                    confidenceHtml = `
+                        <div class="progress" style="height: 20px; --confidence-width: ${percent}%;">
+                            <div class="progress-bar bg-danger" role="progressbar" style="width: var(--confidence-width);">
+                                ${percent}%
+                            </div>
+                        </div>`;
+                }
+
+                let typeClass = '';
+                if (alert.alert_type.includes('ML')) typeClass = 'type-ml';
+                else if (alert.alert_type.includes('SSH')) typeClass = 'type-ssh';
+                else if (alert.alert_type.includes('Web')) typeClass = 'type-web';
+
+                let rawLogJson = alert.raw_log_data;
+                if (typeof rawLogJson === 'object') {
+                    rawLogJson = JSON.stringify(rawLogJson, null, 2);
+                }
+
+                const row = `
+                    <tr class="${alert.confidence > 0.9 ? 'confidence-high' : ''}">
+                        <td>${alert.timestamp}</td>
+                        <td class="${typeClass}"><strong>${alert.alert_type}</strong></td>
+                        <td>${alert.ip_address}</td>
+                        <td style="max-width: 300px; word-break: break-all;">${alert.details}</td>
+                        <td>${confidenceHtml}</td>
+                        <td>
+                            <details>
+                                <summary>Xem JSON</summary>
+                                <pre>${rawLogJson}</pre>
+                            </details>
+                        </td>
+                    </tr>`;
+                tbody.innerHTML += row;
+            });
+        }
+
+        // Hàm chính: Lấy dữ liệu và gọi các hàm cập nhật
+        async function fetchAndUpdateDashboard() {
+            try {
+                const response = await fetch('/dashboard_data');
+                if (!response.ok) return; 
+                
+                const data = await response.json();
+                if (!data) return;
+
+                const totalAlertsEl = document.getElementById('total-alerts-value');
+                if (totalAlertsEl) {
+                    totalAlertsEl.innerText = data.total_alerts;
+                }
+                
+                updatePieChart(data.chart_labels, data.chart_data_counts);
+                updateBarChart(data.chart_labels, data.chart_data_counts);
+                updateAlertsTable(data.alerts);
+
+            } catch (error) {
+                console.error("Lỗi khi cập nhật dashboard:", error);
+            }
+        }
+
+        // Hàm chạy khi trang được tải xong
+        document.addEventListener('DOMContentLoaded', function() {
+        
+        const initialDataEl = document.getElementById('chart-data-container');
+        let initialLabels = [];
+        let initialCounts = [];
+
+        // XỬ LÝ DỮ LIỆU BAN ĐẦU (ĐÂY LÀ PHẦN SỬA LỖI QUAN TRỌNG)
+        try {
+            // Lấy dữ liệu thô từ HTML
+            const rawLabels = initialDataEl.dataset.labels;
+            const rawCounts = initialDataEl.dataset.counts;
+
+            // `JSON.parse` dữ liệu.
+            // Nếu data là 'null' (từ Jinja), JSON.parse sẽ trả về object null.
+            // Chúng ta cần || [] SAU KHI parse để biến object null thành mảng rỗng.
+            initialLabels = JSON.parse(rawLabels || '[]') || [];
+            initialCounts = JSON.parse(rawCounts || '[]') || [];
+
+        } catch (e) {
+            // Nếu có lỗi (ví dụ: data-labels không phải là JSON hợp lệ),
+            // hãy gán mảng rỗng để script không bị dừng
+            console.error("Lỗi parse dữ liệu chart ban đầu:", e);
+            initialLabels = [];
+            initialCounts = [];
+        }
+        
+        // GỌI HÀM VẼ NGAY LẬP TỨC
+        // Luôn gọi hàm vẽ, kể cả khi dữ liệu rỗng (`[]`).
+        // Chart.js có thể xử lý mảng rỗng và vẽ 1 biểu đồ trống.
+        // Điều này quan trọng để 'pieChartInstance' và 'barChartInstance' được tạo ra.
+        updatePieChart(initialLabels, initialCounts);
+        updateBarChart(initialLabels, initialCounts);
+
+        setInterval(fetchAndUpdateDashboard, 1000); 
+    });
+    </script>
 </body>
 </html>
