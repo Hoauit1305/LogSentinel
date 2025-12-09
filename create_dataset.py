@@ -20,9 +20,9 @@ except ImportError:
 # --- Cấu hình ---
 # Trỏ đến 3 file log thô "uy tín" của bạn
 LOG_FILES_TO_PROCESS = [
-    r'D:\LogSentinel\DATALOG\SSH.log',           # [HỖN HỢP] Chứa Nhãn 0 và Nhãn 1
-    r'D:\LogSentinel\DATALOG\clean_access.log', # [SẠCH] Chỉ chứa Nhãn 0
-    r'D:\LogSentinel\DATALOG\attack_webscan_access.log' # [TẤN CÔNG] Chỉ chứa Nhãn 2
+    r'C:\nt140\LogSentinel\DATALOG\SSH.log',           # [HỖN HỢP] Chứa Nhãn 0 và Nhãn 1
+    r'C:\nt140\LogSentinel\DATALOG\clean_access.log', # [SẠCH] Chỉ chứa Nhãn 0
+    r'C:\nt140\LogSentinel\DATALOG\attack_webscan_access.log' # [TẤN CÔNG] Chỉ chứa Nhãn 2
 ]
 
 OUTPUT_CSV_FILE = 'training_dataset.csv' # Tên file CSV đầu ra
