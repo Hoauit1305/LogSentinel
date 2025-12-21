@@ -1,0 +1,14 @@
+🧪 TF-IDF SQLi Detection Result
+Log file: apache_obfuscated_sqli.log
+============================================================
+
+DEBUG | score=0.939 | /index.php?id=1+union+select+user,password+from+users
+[SQLi ML:0.94] /index.php?id=1+union+select+user,password+from+users
+DEBUG | score=0.808 | /index.php?id=1+or+2>1
+[SQLi ML:0.81] /index.php?id=1+or+2>1
+DEBUG | score=0.662 | /index.php?id=1+and+length(user())>1
+[SQLi ML:0.66] /index.php?id=1+and+length(user())>1
+
+========== SUMMARY ==========
+Total requests tested: 3
+Detected SQLi by ML: 3

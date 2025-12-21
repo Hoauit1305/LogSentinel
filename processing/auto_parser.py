@@ -1,6 +1,6 @@
 import re
 import pandas as pd
-from parsers_config import PARSERS # Import từ file config
+from processing.parsers_config import PARSERS
 import datetime
 import sys
 import argparse  # <<< THÊM THƯ VIỆN NÀY
